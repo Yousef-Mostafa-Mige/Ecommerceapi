@@ -1,4 +1,6 @@
 using Ecommerceapi.Data;
+using Ecommerceapi.services.CategoryService;
+using Ecommerceapi.services.OrderServices;
 using Ecommerceapi.services.ProductServices;
 using Ecommerceapi.services.UserServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,6 +50,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IUserServices, UserServices>();
 
 builder.Services.AddScoped<IProductServices, ProductServices>();
+builder.Services.AddScoped<IcategoryServices, CategoryServices>();
+builder.Services.AddScoped<IOrderServices, OrderServices>();
 
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseMySQL(

@@ -29,46 +29,46 @@ namespace Ecommerceapi.services.UserServices
             };
         }
 
-      public async Task<Accesstoken?> LoginUserAsync(
-    LoginUserDto loginUserDto)
-{
-    if (loginUserDto is null)
-    {
-        throw new ArgumentNullException(nameof(loginUserDto));
-    }
+        public async Task<Accesstoken?> LoginUserAsync(
+      LoginUserDto loginUserDto)
+        {
+            if (loginUserDto is null)
+            {
+                throw new ArgumentNullException(nameof(loginUserDto));
+            }
 
-    var user = await context.Users
-        .FirstOrDefaultAsync(
-            u => u.Username == loginUserDto.Username);
+            var user = await context.Users
+                .FirstOrDefaultAsync(
+                    u => u.Username == loginUserDto.Username);
 
-    if (user is null)
-    {
-        return null;
-    }
+            if (user is null)
+            {
+                return null;
+            }
 
-    var passwordVerificationResult =
-        new PasswordHasher<User>()
-            .VerifyHashedPassword(
-                user,
-                user.PasswordHash,
-                loginUserDto.Password
-            );
+            var passwordVerificationResult =
+                new PasswordHasher<User>()
+                    .VerifyHashedPassword(
+                        user,
+                        user.PasswordHash,
+                        loginUserDto.Password
+                    );
 
-    if (passwordVerificationResult ==
-        PasswordVerificationResult.Failed)
-    {
-        return null;
-    }
+            if (passwordVerificationResult ==
+                PasswordVerificationResult.Failed)
+            {
+                return null;
+            }
 
-    return new Accesstoken
-    {
-        Token = GenerateToken(user)
-    };
-}
+            return new Accesstoken
+            {
+                Token = GenerateToken(user)
+            };
+        }
 
-private string GenerateToken(User user)
-{
-    var claims = new List<Claim>
+        private string GenerateToken(User user)
+        {
+            var claims = new List<Claim>
     {
         new Claim(
             ClaimTypes.NameIdentifier,
@@ -81,41 +81,27 @@ private string GenerateToken(User user)
         )
     };
 
-    var secretKey = configuration["AppSettings:SecretKey"];
 
-    var issuer = configuration["AppSettings:Issuer"];
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(configuration["AppSettings:SecretKey"]!)
+            );
 
-    var audience = configuration["AppSettings:Audience"];
+            var creds = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256
+            );
 
-    if (string.IsNullOrEmpty(secretKey) ||
-        string.IsNullOrEmpty(issuer) ||
-        string.IsNullOrEmpty(audience))
-    {
-        throw new InvalidOperationException(
-            "JWT configuration is missing."
-        );
-    }
+            var accessToken = new JwtSecurityToken(
+                issuer: configuration.GetValue<string>("AppSettings:Issuer"),
+                audience: configuration.GetValue<string>("AppSettings:Audience"),
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(1),
+                signingCredentials: creds
+            );
 
-    var key = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(secretKey)
-    );
-
-    var creds = new SigningCredentials(
-        key,
-        SecurityAlgorithms.HmacSha256
-    );
-
-    var accessToken = new JwtSecurityToken(
-        issuer: issuer,
-        audience: audience,
-        claims: claims,
-        expires: DateTime.UtcNow.AddDays(1),
-        signingCredentials: creds
-    );
-
-    return new JwtSecurityTokenHandler()
-        .WriteToken(accessToken);
-}
+            return new JwtSecurityTokenHandler()
+                .WriteToken(accessToken);
+        }
 
         public async Task<UserResponseDto> RegisterUserAsync(RegisterUserDto registerUserDto)
         {
