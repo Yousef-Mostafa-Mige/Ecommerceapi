@@ -1,6 +1,7 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.OrderDtos;
 using Ecommerceapi.Entities;
+using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerceapi.services.OrderServices
@@ -12,14 +13,14 @@ namespace Ecommerceapi.services.OrderServices
         {
             if (orderDto is null)
             {
-                return null!;
+                throw new ArgumentNullException(nameof(orderDto));
             }
 
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user is null)
             {
-                return null!;
+                throw new NotFoundException($"User with ID {userId} not found.");
             }
 
             var order = new Order
@@ -33,7 +34,7 @@ namespace Ecommerceapi.services.OrderServices
 
                 if (product is null)
                 {
-                    return null!;
+                    throw new NotFoundException($"Product with ID {orderDto.ProductId} not found.");
                 }
 
                 var orderItem = new OrderItem
@@ -57,7 +58,7 @@ namespace Ecommerceapi.services.OrderServices
 
             if (createdOrder is null)
             {
-                return null!;
+                throw new NotFoundException($"Order with ID {order.Id} not found.");
             }
             return new OrderResponseDto
             {
@@ -94,7 +95,7 @@ namespace Ecommerceapi.services.OrderServices
                 .ToListAsync();
             if (orders is null)
             {
-                return null!;
+                throw new NotFoundException("No orders found.");
             }
             return new List<OrderResponseDto>(orders.Select(order => new OrderResponseDto
             {
@@ -143,7 +144,7 @@ namespace Ecommerceapi.services.OrderServices
                 .FirstOrDefaultAsync();
             if (order is null)
             {
-                return null!;
+                throw new NotFoundException($"Order with ID {id} not found.");
             }
             return new OrderResponseDto
             {

@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
 using System.Text;
 using System.Security.Cryptography;
+using ECommerceApi.Middleware;
 namespace Ecommerceapi.services.UserServices
 {
     public class UserServices(AppDBContext context, IConfiguration configuration) : IUserServices
@@ -20,7 +21,7 @@ namespace Ecommerceapi.services.UserServices
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user is null)
             {
-                return null!;
+                throw new NotFoundException($"User with ID {id} not found.");
             }
             return new UserResponseDto
             {
@@ -44,7 +45,7 @@ namespace Ecommerceapi.services.UserServices
 
             if (user is null)
             {
-                return null;
+                throw new NotFoundException($"User with username {loginUserDto.Username} not found.");
             }
 
             var passwordVerificationResult =
@@ -58,7 +59,7 @@ namespace Ecommerceapi.services.UserServices
             if (passwordVerificationResult ==
                 PasswordVerificationResult.Failed)
             {
-                return null;
+                throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
             return await GenerateTokenAsync(user);
@@ -115,7 +116,7 @@ namespace Ecommerceapi.services.UserServices
         {
             if (await context.Users.AnyAsync(u => u.Username == registerUserDto.Username))
             {
-                throw new Exception("Username already exists.");
+                throw new BadRequestException("Username already exists.");
             }
 
             var user = new User
@@ -156,7 +157,7 @@ namespace Ecommerceapi.services.UserServices
 
             if (user is null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                return null;
+                throw new UnauthorizedAccessException("Invalid or expired refresh token.");
             }
 
 

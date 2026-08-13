@@ -1,6 +1,7 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.ProductDtos;
 using Ecommerceapi.Entities;
+using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerceapi.services.ProductServices
@@ -13,7 +14,7 @@ namespace Ecommerceapi.services.ProductServices
 
             if (category is null)
             {
-                return null!;
+                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
             }
             var product = new Product
             {
@@ -38,7 +39,7 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            var product =  await context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null)
             {
                 return false;
@@ -69,7 +70,7 @@ namespace Ecommerceapi.services.ProductServices
             var product = await context.Products.Where(p => p.Id == id).Include(p => p.Category).FirstOrDefaultAsync();
             if (product is null)
             {
-                return null!;
+                throw new NotFoundException($"Product with ID {id} not found.");
             }
 
             return new ProductResponseDto
@@ -88,13 +89,14 @@ namespace Ecommerceapi.services.ProductServices
             var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null)
             {
-                return null!;
+                throw new NotFoundException($"Product with ID {id} not found.");
             }
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == productDto.CategoryId);
-             if (category is null)
+            if (category is null)
             {
-                return null!;
+                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
             }
+
 
             product.Name = productDto.Name;
             product.Price = productDto.Price;
@@ -113,5 +115,5 @@ namespace Ecommerceapi.services.ProductServices
                 CreatedAt = product.CreatedAt
             };
         }
-        }
     }
+}

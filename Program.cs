@@ -3,6 +3,7 @@ using Ecommerceapi.services.CategoryService;
 using Ecommerceapi.services.OrderServices;
 using Ecommerceapi.services.ProductServices;
 using Ecommerceapi.services.UserServices;
+using ECommerceApi.Middleware;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,7 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddFluentValidationAutoValidation();
-
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 // 3. مسح وتسجيل كافة الـ Validators الموجودة في المشروع أوتوماتيكياً
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -73,6 +75,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+app.UseMiddleware<GlobalExceptionHandler>();
 app.UseAuthentication();
 
 app.UseAuthorization();

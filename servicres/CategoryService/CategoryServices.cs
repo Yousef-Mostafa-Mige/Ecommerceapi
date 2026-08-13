@@ -1,6 +1,7 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.CategoryDtos;
 using Ecommerceapi.Entities;
+using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerceapi.services.CategoryService
@@ -33,7 +34,7 @@ namespace Ecommerceapi.services.CategoryService
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (category is null)
             {
-                return false;
+                throw new NotFoundException($"Category with ID {id} not found.");
             }
 
             context.Categories.Remove(category);
@@ -57,7 +58,7 @@ namespace Ecommerceapi.services.CategoryService
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (category is null)
             {
-                return null!;
+                throw new NotFoundException($"Category with ID {id} not found.");
             }
             return new CategoryResponseDto
             {
@@ -72,7 +73,7 @@ namespace Ecommerceapi.services.CategoryService
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (category is null)
             {
-                return null!;
+                throw new NotFoundException($"Category with ID {id} not found.");
             }
 
             category.Name = categoryRequestDto.Name;
