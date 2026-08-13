@@ -3,6 +3,8 @@ using Ecommerceapi.services.CategoryService;
 using Ecommerceapi.services.OrderServices;
 using Ecommerceapi.services.ProductServices;
 using Ecommerceapi.services.UserServices;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +14,11 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
+
+// 3. مسح وتسجيل كافة الـ Validators الموجودة في المشروع أوتوماتيكياً
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
 

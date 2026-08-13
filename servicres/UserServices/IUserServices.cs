@@ -8,5 +8,6 @@ namespace Ecommerceapi.services.UserServices
         Task<UserResponseDto> RegisterUserAsync(RegisterUserDto registerUserDto);
         Task<Accesstoken?> LoginUserAsync(LoginUserDto loginUserDto);
         Task<UserResponseDto?> GetUserByIdAsync(int id);
+        Task<Accesstoken?> RefreshTokenAsync(string refreshToken);
     }
 }

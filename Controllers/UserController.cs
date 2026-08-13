@@ -1,5 +1,6 @@
 using Ecommerceapi.Dtos.UserDtos;
 using Ecommerceapi.services.UserServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerceapi.Controllers
@@ -8,6 +9,7 @@ namespace Ecommerceapi.Controllers
     [Route("api/[controller]")]
     public class UserController(IUserServices userService) : ControllerBase
     {
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -31,6 +33,16 @@ namespace Ecommerceapi.Controllers
             if (result is null)
             {
                 return Unauthorized("Invalid credentials.");
+            }
+            return Ok(result);
+        }
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        {
+            var result = await userService.RefreshTokenAsync(refreshToken);
+            if (result is null)
+            {
+                return Unauthorized("Invalid or expired refresh token.");
             }
             return Ok(result);
         }

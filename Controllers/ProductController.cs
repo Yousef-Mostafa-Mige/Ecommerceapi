@@ -1,13 +1,16 @@
 using Ecommerceapi.Dtos.ProductDtos;
 using Ecommerceapi.services.ProductServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerceapi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ProductController(IProductServices productService) : ControllerBase
     {
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProductById(int id)
         {
@@ -18,6 +21,7 @@ namespace Ecommerceapi.Controllers
             }
             return Ok(product);
         }
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
@@ -28,6 +32,7 @@ namespace Ecommerceapi.Controllers
             }
             return Ok(products);
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
         {
@@ -38,6 +43,7 @@ namespace Ecommerceapi.Controllers
             }
             return Ok(product);
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto productDto)
         {
@@ -48,6 +54,7 @@ namespace Ecommerceapi.Controllers
             }
             return Ok(product);
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {

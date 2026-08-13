@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
 using System.Text;
+using System.Security.Cryptography;
 namespace Ecommerceapi.services.UserServices
 {
     public class UserServices(AppDBContext context, IConfiguration configuration) : IUserServices
@@ -60,21 +61,28 @@ namespace Ecommerceapi.services.UserServices
                 return null;
             }
 
+            return await GenerateTokenAsync(user);
+        }
+        private async Task<Accesstoken?> GenerateTokenAsync(User user)
+        {
             return new Accesstoken
             {
+                refreshToken = await GenerateAndSaveRefreshTokenAsync(user),
                 Token = GenerateToken(user)
             };
         }
-
         private string GenerateToken(User user)
         {
             var claims = new List<Claim>
-    {
+         {
         new Claim(
             ClaimTypes.NameIdentifier,
             user.Id.ToString()
         ),
-
+        new Claim(
+            ClaimTypes.Role,
+            user.Role
+        ),
         new Claim(
             ClaimTypes.Name,
             user.Username
@@ -127,5 +135,33 @@ namespace Ecommerceapi.services.UserServices
                 CreatedAt = user.CreatedAt
             };
         }
+        private string GenerateToken()
+        {
+            var rondomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(rondomNumber);
+            return Convert.ToBase64String(rondomNumber);
+        }
+        private async Task<string> GenerateAndSaveRefreshTokenAsync(User user)
+        {
+            var refreshToken = GenerateToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await context.SaveChangesAsync();
+            return refreshToken;
+        }
+        public async Task<Accesstoken?> RefreshTokenAsync(string refreshToken)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            if (user is null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            {
+                return null;
+            }
+
+
+            return await GenerateTokenAsync(user);
+        }
+
     }
 }

@@ -11,7 +11,7 @@ namespace Ecommerceapi.Controllers
     [Route("api/[controller]")]
     public class OrdersController(IOrderServices orderService) : ControllerBase
     {
-       
+
 
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderItemDto orderDto)
@@ -45,11 +45,11 @@ namespace Ecommerceapi.Controllers
             }
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllOrders()
         {
-           
+
             var result = await orderService.GetAllOrdersAsync();
             return Ok(result);
         }
