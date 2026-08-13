@@ -75,7 +75,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-app.UseMiddleware<GlobalExceptionHandler>();
+app.UseExceptionHandler();
 app.UseAuthentication();
 
 app.UseAuthorization();

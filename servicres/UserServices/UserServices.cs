@@ -157,7 +157,7 @@ namespace Ecommerceapi.services.UserServices
 
             if (user is null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+                throw new UnauthorizedException("Invalid or expired refresh token.");
             }
 
 
