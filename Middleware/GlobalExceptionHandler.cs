@@ -14,6 +14,7 @@ namespace ECommerceApi.Middleware
                 NotFoundException => (StatusCodes.Status404NotFound, "not found"),
                 BadRequestException => (StatusCodes.Status400BadRequest, "bad request"),
                 UnauthorizedException => (StatusCodes.Status401Unauthorized, "unauthorized"),
+                NullReferenceException => (StatusCodes.Status400BadRequest, "null reference"),
                 _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
             };
             httpContext.Response.StatusCode = statusCode;

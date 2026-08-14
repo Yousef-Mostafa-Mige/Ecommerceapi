@@ -21,7 +21,7 @@ namespace Ecommerceapi.services.UserServices
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user is null)
             {
-                throw new NotFoundException($"User with ID {id} not found.");
+                throw new lNullReferenceException($"User with ID {id} not found.");
             }
             return new UserResponseDto
             {
@@ -36,7 +36,7 @@ namespace Ecommerceapi.services.UserServices
         {
             if (loginUserDto is null)
             {
-                throw new ArgumentNullException(nameof(loginUserDto));
+                throw new lNullReferenceException(nameof(loginUserDto));
             }
 
             var user = await context.Users
@@ -45,7 +45,7 @@ namespace Ecommerceapi.services.UserServices
 
             if (user is null)
             {
-                throw new NotFoundException($"User with username {loginUserDto.Username} not found.");
+                throw new lNullReferenceException($"User with username {loginUserDto.Username} not found.");
             }
 
             var passwordVerificationResult =

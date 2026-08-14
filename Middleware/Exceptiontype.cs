@@ -18,4 +18,10 @@ namespace ECommerceApi.Middleware
         {
         }
     }
+    public class lNullReferenceException : Exception
+    {
+        public lNullReferenceException(string message) : base(message)
+        {
+        }
+    }
 }

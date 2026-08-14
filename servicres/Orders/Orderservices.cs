@@ -28,24 +28,24 @@ namespace Ecommerceapi.services.OrderServices
                 UserId = userId
             };
 
-            
-                var product = await context.Products
-                    .FirstOrDefaultAsync(p => p.Id == orderDto.ProductId);
 
-                if (product is null)
-                {
-                    throw new NotFoundException($"Product with ID {orderDto.ProductId} not found.");
-                }
+            var product = await context.Products
+                .FirstOrDefaultAsync(p => p.Id == orderDto.ProductId);
 
-                var orderItem = new OrderItem
-                {
-                    ProductId = product.Id,
-                    Quantity = orderDto.Quantity,
-                    UnitPrice = product.Price
-                };
+            if (product is null)
+            {
+                throw new NotFoundException($"Product with ID {orderDto.ProductId} not found.");
+            }
 
-                order.OrderItems.Add(orderItem);
-            
+            var orderItem = new OrderItem
+            {
+                ProductId = product.Id,
+                Quantity = orderDto.Quantity,
+                UnitPrice = product.Price
+            };
+
+            order.OrderItems.Add(orderItem);
+
 
             context.Orders.Add(order);
 
@@ -117,7 +117,7 @@ namespace Ecommerceapi.services.OrderServices
             var orders = await context.Orders
                 .Where(o => o.UserId == id)
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
+                .ThenInclude(oi => oi.Product)
                 .ToListAsync();
             return orders.Select(order => new OrderResponseDto
             {

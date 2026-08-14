@@ -12,11 +12,11 @@ namespace Ecommerceapi.Dtos.ProductDtos
     }
 }
 public class ProductValidationCreateProductDto : AbstractValidator<CreateProductDto>
+{
+    public ProductValidationCreateProductDto()
     {
-        public ProductValidationCreateProductDto()
-        {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
-            RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
-            RuleFor(x => x.CategoryId).GreaterThan(0).WithMessage("CategoryId must be greater than zero.");
-        }
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+        RuleFor(x => x.CategoryId).GreaterThan(0).WithMessage("CategoryId must be greater than zero.");
     }
+}

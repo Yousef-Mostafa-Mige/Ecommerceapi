@@ -1,13 +1,14 @@
 using FluentValidation;
 
-namespace Ecommerceapi.Dtos.UserDtos;
-
-public class LoginUserDto
+namespace Ecommerceapi.Dtos.UserDtos
 {
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-public class Uservalidationlogin : AbstractValidator<LoginUserDto>
+
+    public class LoginUserDto
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+    public class Uservalidationlogin : AbstractValidator<LoginUserDto>
     {
         public Uservalidationlogin()
         {
@@ -15,3 +16,4 @@ public class Uservalidationlogin : AbstractValidator<LoginUserDto>
             RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required.");
         }
     }
+}

@@ -1,4 +1,5 @@
 using Ecommerceapi.Data;
+using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Dtos.ProductDtos;
 using Ecommerceapi.Entities;
 using ECommerceApi.Middleware;
@@ -14,7 +15,7 @@ namespace Ecommerceapi.services.ProductServices
 
             if (category is null)
             {
-                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
+                throw new lNullReferenceException($"Category with ID {productDto.CategoryId} not found.");
             }
             var product = new Product
             {
@@ -42,7 +43,7 @@ namespace Ecommerceapi.services.ProductServices
             var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null)
             {
-                return false;
+                throw new lNullReferenceException($"Product with ID {id} not found.");
             }
 
             context.Products.Remove(product);
@@ -51,18 +52,36 @@ namespace Ecommerceapi.services.ProductServices
             return true;
         }
 
-        public async Task<List<ProductResponseDto>> GetAllProductsAsync()
+        public async Task<PaginatedResponseDto<ProductResponseDto>> GetAllProductsAsync(PaginatedRequestDto Page)
         {
-            var products = await context.Products.Include(p => p.Category).ToListAsync();
-            return products.Select(p => new ProductResponseDto
+            var qury = context.Products.Include(p => p.Category).AsQueryable();
+            var totalProducts = await qury.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)Page.PageSize);
+            if (Page.PageNumber < 1 || Page.PageNumber > totalPages)
             {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category?.Name ?? string.Empty,
-                CreatedAt = p.CreatedAt
-            }).ToList();
+                throw new BadHttpRequestException($"Page number {Page.PageNumber} is out of range. Total pages: {totalPages}.");
+            }
+            var products = await context.Products
+            .Include(p => p.Category)
+            .Take(Page.PageSize)
+            .Skip((Page.PageNumber - 1) * Page.PageSize)
+            .ToListAsync();
+            return new PaginatedResponseDto<ProductResponseDto>
+            {
+                PageNumber = Page.PageNumber,
+                PageSize = Page.PageSize,
+                TotalCount = totalProducts,
+                TotalPages =totalPages,
+                Items = products.Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price = p.Price,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category?.Name ?? string.Empty,
+                    CreatedAt = p.CreatedAt
+                }).ToList()
+            };
         }
 
         public async Task<ProductResponseDto?> GetProductByIdAsync(int id)
@@ -70,7 +89,7 @@ namespace Ecommerceapi.services.ProductServices
             var product = await context.Products.Where(p => p.Id == id).Include(p => p.Category).FirstOrDefaultAsync();
             if (product is null)
             {
-                throw new NotFoundException($"Product with ID {id} not found.");
+                throw new lNullReferenceException($"Product with ID {id} not found.");
             }
 
             return new ProductResponseDto
@@ -89,12 +108,12 @@ namespace Ecommerceapi.services.ProductServices
             var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null)
             {
-                throw new NotFoundException($"Product with ID {id} not found.");
+                throw new lNullReferenceException($"Product with ID {id} not found.");
             }
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == productDto.CategoryId);
             if (category is null)
             {
-                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
+                throw new lNullReferenceException($"Category with ID {productDto.CategoryId} not found.");
             }
 
 

@@ -1,3 +1,4 @@
+using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Dtos.ProductDtos;
 using Ecommerceapi.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
@@ -23,13 +24,10 @@ namespace Ecommerceapi.Controllers
         }
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts()
+        public async Task<IActionResult> GetAllProducts([FromQuery] PaginatedRequestDto page)
         {
-            var products = await productService.GetAllProductsAsync();
-            if (products is null)
-            {
-                return BadRequest("Failed to retrieve products.");
-            }
+            var products = await productService.GetAllProductsAsync(page);
+            
             return Ok(products);
         }
         [Authorize(Roles = "Admin")]
