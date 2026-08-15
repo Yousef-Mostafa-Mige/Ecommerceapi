@@ -1,6 +1,7 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Dtos.ProductDtos;
+using Ecommerceapi.Dtos.search_sort_filiter;
 using Ecommerceapi.Entities;
 using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
@@ -63,15 +64,15 @@ namespace Ecommerceapi.services.ProductServices
             }
             var products = await context.Products
             .Include(p => p.Category)
-            .Take(Page.PageSize)
             .Skip((Page.PageNumber - 1) * Page.PageSize)
+            .Take(Page.PageSize)
             .ToListAsync();
             return new PaginatedResponseDto<ProductResponseDto>
             {
                 PageNumber = Page.PageNumber,
                 PageSize = Page.PageSize,
                 TotalCount = totalProducts,
-                TotalPages =totalPages,
+                TotalPages = totalPages,
                 Items = products.Select(p => new ProductResponseDto
                 {
                     Id = p.Id,
@@ -134,5 +135,175 @@ namespace Ecommerceapi.services.ProductServices
                 CreatedAt = product.CreatedAt
             };
         }
+        public async Task<PaginatedResponseDto<ProductResponseDto>>GetProductsAsync(ProductQueryRequest request)
+        {
+            var query = context.Products
+                .Include(p => p.Category)
+                .AsQueryable();
+
+            // =========================
+            // SEARCH
+            // =========================
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                query = query.Where(p =>
+                    p.Name.Contains(request.Search));
+            }
+
+
+            // =========================
+            // FILTER
+            // =========================
+
+            if (request.CategoryId.HasValue)
+            {
+                query = query.Where(p =>
+                    p.CategoryId == request.CategoryId.Value);
+            }
+
+            if (request.MinPrice.HasValue)
+            {
+                query = query.Where(p =>
+                    p.Price >= request.MinPrice.Value);
+            }
+
+            if (request.MaxPrice.HasValue)
+            {
+                query = query.Where(p =>
+                    p.Price <= request.MaxPrice.Value);
+            }
+
+
+            // =========================
+            // SORT
+            // =========================
+
+            if (!string.IsNullOrWhiteSpace(request.SortBy))
+            {
+                switch (request.SortBy.ToLower())
+                {
+                    case "price":
+
+                        if (request.SortOrder?.ToLower() == "desc")
+                        {
+                            query = query.OrderByDescending(p => p.Price);
+                        }
+                        else
+                        {
+                            query = query.OrderBy(p => p.Price);
+                        }
+
+                        break;
+
+
+                    case "name":
+
+                        if (request.SortOrder?.ToLower() == "desc")
+                        {
+                            query = query.OrderByDescending(p => p.Name);
+                        }
+                        else
+                        {
+                            query = query.OrderBy(p => p.Name);
+                        }
+
+                        break;
+
+
+                    case "date":
+
+                        if (request.SortOrder?.ToLower() == "desc")
+                        {
+                            query = query.OrderByDescending(p => p.CreatedAt);
+                        }
+                        else
+                        {
+                            query = query.OrderBy(p => p.CreatedAt);
+                        }
+
+                        break;
+
+
+                    case "id":
+
+                        if (request.SortOrder?.ToLower() == "desc")
+                        {
+                            query = query.OrderByDescending(p => p.Id);
+                        }
+                        else
+                        {
+                            query = query.OrderBy(p => p.Id);
+                        }
+
+                        break;
+
+
+                    default:
+                        query = query.OrderBy(p => p.Id);
+                        break;
+                }
+            }
+            else
+            {
+                query = query.OrderBy(p => p.Id);
+            }
+
+
+            // =========================
+            // COUNT
+            // =========================
+
+            var totalCount = await query.CountAsync();
+
+
+            // =========================
+            // PAGINATION
+            // =========================
+
+            var totalPages = (int)Math.Ceiling(
+                totalCount / (double)request.Page.PageSize);
+
+
+            if (request.Page.PageNumber < 1 ||
+                (totalPages > 0 &&
+                 request.Page.PageNumber > totalPages))
+            {
+                throw new BadHttpRequestException(
+                    $"Page {request.Page.PageNumber} not found.");
+            }
+
+
+            var products = await query
+                .Skip(
+                    (request.Page.PageNumber - 1)
+                    * request.Page.PageSize)
+                .Take(request.Page.PageSize)
+                .ToListAsync();
+
+
+            // =========================
+            // RESPONSE
+            // =========================
+
+            return new PaginatedResponseDto<ProductResponseDto>
+            {
+                PageNumber = request.Page.PageNumber,
+                PageSize = request.Page.PageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+
+                Items = products.Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price = p.Price,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category?.Name ?? string.Empty,
+                    CreatedAt = p.CreatedAt
+                }).ToList()
+            };
+        }
+
     }
 }

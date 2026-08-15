@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Ecommerceapi.Dtos.OrderDtos;
+using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.services.OrderServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,10 +48,10 @@ namespace Ecommerceapi.Controllers
         }
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public async Task<IActionResult> GetAllOrders()
+        public async Task<IActionResult> GetAllOrders(PaginatedRequestDto  page)
         {
 
-            var result = await orderService.GetAllOrdersAsync();
+            var result = await orderService.GetAllOrdersAsync(page);
             return Ok(result);
         }
         [HttpDelete("{id}")]
@@ -69,14 +70,14 @@ namespace Ecommerceapi.Controllers
             return Ok("Order deleted successfully.");
         }
         [HttpGet("user")]
-        public async Task<IActionResult> GetOrdersByUserId()
+        public async Task<IActionResult> GetOrdersByUserId(PaginatedRequestDto  page)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdClaim is null)
             {
                 return Unauthorized("User ID claim not found.");
             }
-            var result = await orderService.GetOrdersByUserIdAsync(int.Parse(userIdClaim));
+            var result = await orderService.GetOrdersByUserIdAsync(int.Parse(userIdClaim),  page);
             return Ok(result);
         }
     }

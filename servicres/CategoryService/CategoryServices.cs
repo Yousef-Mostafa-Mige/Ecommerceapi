@@ -1,5 +1,6 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.CategoryDtos;
+using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Entities;
 using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
@@ -43,14 +44,28 @@ namespace Ecommerceapi.services.CategoryService
             return true;
         }
 
-        public async Task<List<CategoryResponseDto>> GetAllCategoriesAsync()
+        public async Task<PaginatedResponseDto<CategoryResponseDto>> GetAllCategoriesAsync(PaginatedRequestDto page)
         {
-            var categories = await context.Categories.ToListAsync();
-            return categories.Select(c => new CategoryResponseDto
+            var qury = context.Categories.AsQueryable();
+            var categorycoute = await qury.CountAsync();
+            var totlepages = (int)Math.Ceiling(categorycoute / (double)page.PageSize);
+            if (page.PageNumber < 1 || page.PageNumber > totlepages)
             {
-                Id = c.Id,
-                Name = c.Name
-            }).ToList();
+                throw new BadHttpRequestException("http bad caregory");
+            }
+            var categories = await context.Categories.Skip((page.PageNumber - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            return new PaginatedResponseDto<CategoryResponseDto>
+            {
+                PageNumber = page.PageNumber,
+                PageSize = page.PageSize,
+                TotalCount = categorycoute,
+                TotalPages = totlepages,
+                Items = categories.Select(c => new CategoryResponseDto
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }).ToList()
+            };
         }
 
         public async Task<CategoryResponseDto?> GetCategoryByIdAsync(int id)

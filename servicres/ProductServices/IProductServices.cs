@@ -1,5 +1,6 @@
 using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Dtos.ProductDtos;
+using Ecommerceapi.Dtos.search_sort_filiter;
 
 namespace Ecommerceapi.services.ProductServices
 {
@@ -10,5 +11,6 @@ namespace Ecommerceapi.services.ProductServices
         Task<ProductResponseDto> CreateProductAsync(CreateProductDto productDto);
         Task<ProductResponseDto?> UpdateProductAsync(int id, UpdateProductDto productDto);
         Task<bool> DeleteProductAsync(int id);
+        Task<PaginatedResponseDto<ProductResponseDto>>GetProductsAsync(ProductQueryRequest request);
     }
 }

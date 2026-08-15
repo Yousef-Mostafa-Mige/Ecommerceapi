@@ -1,5 +1,6 @@
 using Ecommerceapi.Data;
 using Ecommerceapi.Dtos.OrderDtos;
+using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Entities;
 using ECommerceApi.Middleware;
 using Microsoft.EntityFrameworkCore;
@@ -87,53 +88,84 @@ namespace Ecommerceapi.services.OrderServices
             return true;
         }
 
-        public async Task<List<OrderResponseDto>> GetAllOrdersAsync()
+        public async Task<PaginatedResponseDto<OrderResponseDto>> GetAllOrdersAsync(PaginatedRequestDto Page)
         {
+            var query = context.Orders.AsQueryable();
+            var totleorders = await query.CountAsync();
+            var totlepages = (int)Math.Ceiling(totleorders / (double)Page.PageSize);
+            if (Page.PageNumber < 1 || Page.PageNumber > totlepages)
+            {
+                throw new BadHttpRequestException("error in pages");
+            }
             var orders = await context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
+                .Skip((Page.PageNumber - 1) * Page.PageSize)
+                .Take(Page.PageSize)
                 .ToListAsync();
             if (orders is null)
             {
                 throw new NotFoundException("No orders found.");
             }
-            return new List<OrderResponseDto>(orders.Select(order => new OrderResponseDto
+            return new PaginatedResponseDto<OrderResponseDto>
             {
-                Id = order.Id,
-                UserId = order.UserId,
-                CreatedAt = order.CreatedAt,
-
-                Items = order.OrderItems.Select(item => new OrderItemResponseDto
+                PageNumber = Page.PageNumber,
+                PageSize = Page.PageSize,
+                TotalCount = totleorders,
+                TotalPages = totlepages,
+                Items = orders.Select(order => new OrderResponseDto
                 {
-                    ProductId = item.ProductId,
-                    ProductName = item.Product?.Name ?? string.Empty,
-                    Quantity = item.Quantity,
-                    Price = item.UnitPrice
+                    Id = order.Id,
+                    UserId = order.UserId,
+                    CreatedAt = order.CreatedAt,
+                    Items = order.OrderItems.Select(item => new OrderItemResponseDto
+                    {
+                        ProductId = item.ProductId,
+                        ProductName = item.Product?.Name ?? string.Empty,
+                        Quantity = item.Quantity,
+                        Price = item.UnitPrice
+                    }).ToList()
                 }).ToList()
-            }));
+            };
+
         }
-        public async Task<List<OrderResponseDto>?> GetOrdersByUserIdAsync(int id)
+        public async Task<PaginatedResponseDto<OrderResponseDto>?> GetOrdersByUserIdAsync(int id, PaginatedRequestDto Page)
         {
+            var qury = context.Orders.AsQueryable();
+            var totleorders = await qury.CountAsync();
+            var totlepage = (int)Math.Ceiling(totleorders / (double)Page.PageSize);
+            if (Page.PageNumber < 1 || Page.PageNumber > totlepage)
+            {
+                throw new BadHttpRequestException("http error orders");
+            }
             var orders = await context.Orders
                 .Where(o => o.UserId == id)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
+                .Skip((Page.PageNumber - 1) * Page.PageSize)
+                .Take(Page.PageSize)
                 .ToListAsync();
-            return orders.Select(order => new OrderResponseDto
+            return new PaginatedResponseDto<OrderResponseDto>
             {
-                Id = order.Id,
-                UserId = order.UserId,
-                CreatedAt = order.CreatedAt,
-
-                Items = order.OrderItems.Select(item => new OrderItemResponseDto
+                PageNumber = Page.PageNumber,
+                PageSize = Page.PageSize,
+                TotalCount = totleorders,
+                TotalPages = totlepage,
+                Items = orders.Select(order => new OrderResponseDto
                 {
-                    ProductId = item.ProductId,
-                    ProductName = item.Product?.Name ?? string.Empty,
-                    Quantity = item.Quantity,
-                    Price = item.UnitPrice
-                }).ToList()
+                    Id = order.Id,
+                    UserId = order.UserId,
+                    CreatedAt = order.CreatedAt,
 
-            }).ToList();
+                    Items = order.OrderItems.Select(item => new OrderItemResponseDto
+                    {
+                        ProductId = item.ProductId,
+                        ProductName = item.Product?.Name ?? string.Empty,
+                        Quantity = item.Quantity,
+                        Price = item.UnitPrice
+                    }).ToList()
+                }).ToList()
+            };
         }
 
         public async Task<OrderResponseDto?> GetOrderByIdAsync(int id, int userId)

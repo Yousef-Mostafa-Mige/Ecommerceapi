@@ -2,6 +2,7 @@ using Ecommerceapi.Dtos.CategoryDtos;
 using Ecommerceapi.services.CategoryService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Ecommerceapi.Dtos.Pagination;
 
 namespace Ecommerceapi.Controllers
 {
@@ -33,9 +34,9 @@ namespace Ecommerceapi.Controllers
         }
          [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetAllCategories()
+        public async Task<IActionResult> GetAllCategories(PaginatedRequestDto  page)
         {
-            var result = await categoryService.GetAllCategoriesAsync();
+            var result = await categoryService.GetAllCategoriesAsync(page);
             return Ok(result);
         }
         [Authorize(Roles = "Admin")]

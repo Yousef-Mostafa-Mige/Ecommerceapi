@@ -1,5 +1,6 @@
 using Ecommerceapi.Dtos.Pagination;
 using Ecommerceapi.Dtos.ProductDtos;
+using Ecommerceapi.Dtos.search_sort_filiter;
 using Ecommerceapi.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,7 @@ namespace Ecommerceapi.Controllers
         public async Task<IActionResult> GetAllProducts([FromQuery] PaginatedRequestDto page)
         {
             var products = await productService.GetAllProductsAsync(page);
-            
+
             return Ok(products);
         }
         [Authorize(Roles = "Admin")]
@@ -62,6 +63,13 @@ namespace Ecommerceapi.Controllers
                 return NotFound("Product not found.");
             }
             return Ok("Product deleted successfully.");
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> GetProducts([FromQuery] ProductQueryRequest request)
+        {
+            var result = await productService.GetProductsAsync(request);
+
+            return Ok(result);
         }
     }
 }
