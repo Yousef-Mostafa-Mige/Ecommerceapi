@@ -14,14 +14,21 @@ namespace Ecommerceapi.services.ProductServices
         {
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == productDto.CategoryId);
 
+
             if (category is null)
             {
-                throw new lNullReferenceException($"Category with ID {productDto.CategoryId} not found.");
+                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
+            }
+            if (productDto.stok < 1)
+            {
+                throw new NotFoundException($"stok mast be over zero.");
+
             }
             var product = new Product
             {
                 Name = productDto.Name,
                 Price = productDto.Price,
+                stok = productDto.stok,
                 CategoryId = productDto.CategoryId
             };
 
@@ -33,6 +40,7 @@ namespace Ecommerceapi.services.ProductServices
                 Id = product.Id,
                 Name = product.Name,
                 Price = product.Price,
+                stock = product.stok,
                 CategoryId = product.CategoryId,
                 CategoryName = category.Name,
                 CreatedAt = product.CreatedAt
@@ -41,29 +49,24 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if (product is null)
+            var product = await context.Products.Where(p =>p.Id == id).ExecuteDeleteAsync();
+            if (product == 0)
             {
-                throw new lNullReferenceException($"Product with ID {id} not found.");
+                throw new NotFoundException($"Product with ID {id} not found.");
             }
-
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
-
             return true;
         }
 
         public async Task<PaginatedResponseDto<ProductResponseDto>> GetAllProductsAsync(PaginatedRequestDto Page)
         {
-            var qury = context.Products.Include(p => p.Category).AsQueryable();
+            var qury = context.Products.Include(p => p.Category).AsQueryable().AsNoTracking();
             var totalProducts = await qury.CountAsync();
             var totalPages = (int)Math.Ceiling(totalProducts / (double)Page.PageSize);
             if (Page.PageNumber < 1 || Page.PageNumber > totalPages)
             {
-                throw new BadHttpRequestException($"Page number {Page.PageNumber} is out of range. Total pages: {totalPages}.");
+                throw new BadRequestException($"Page number {Page.PageNumber} is out of range. Total pages: {totalPages}.");
             }
-            var products = await context.Products
-            .Include(p => p.Category)
+            var products = await qury
             .Skip((Page.PageNumber - 1) * Page.PageSize)
             .Take(Page.PageSize)
             .ToListAsync();
@@ -78,6 +81,7 @@ namespace Ecommerceapi.services.ProductServices
                     Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
+                    stock = p.stok,
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category?.Name ?? string.Empty,
                     CreatedAt = p.CreatedAt
@@ -87,10 +91,11 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<ProductResponseDto?> GetProductByIdAsync(int id)
         {
-            var product = await context.Products.Where(p => p.Id == id).Include(p => p.Category).FirstOrDefaultAsync();
+            var qury = context.Products.Where(p => p.Id == id).AsQueryable().AsNoTracking();
+            var product = await qury.FirstOrDefaultAsync();
             if (product is null)
             {
-                throw new lNullReferenceException($"Product with ID {id} not found.");
+                throw new NotFoundException($"Product with ID {id} not found.");
             }
 
             return new ProductResponseDto
@@ -98,6 +103,7 @@ namespace Ecommerceapi.services.ProductServices
                 Id = product.Id,
                 Name = product.Name,
                 Price = product.Price,
+                stock = product.stok,
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category?.Name ?? string.Empty,
                 CreatedAt = product.CreatedAt
@@ -106,38 +112,41 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<ProductResponseDto?> UpdateProductAsync(int id, UpdateProductDto productDto)
         {
-            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if (product is null)
-            {
-                throw new lNullReferenceException($"Product with ID {id} not found.");
-            }
-            var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == productDto.CategoryId);
+            var category = await context.Categories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == productDto.CategoryId);
+
             if (category is null)
             {
-                throw new lNullReferenceException($"Category with ID {productDto.CategoryId} not found.");
+                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
             }
-
-
-            product.Name = productDto.Name;
-            product.Price = productDto.Price;
-            product.CategoryId = productDto.CategoryId;
-
-            await context.SaveChangesAsync();
-
-
+            int rowsAffected = await context.Products
+                .Where(p => p.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.CategoryId, productDto.CategoryId)
+                    .SetProperty(p => p.Name, p => productDto.Name ?? p.Name)
+                    .SetProperty(p => p.Price, p => productDto.Price ?? p.Price)
+                    .SetProperty(p => p.stok, p => productDto.stok ?? p.stok)
+                );
+            if (rowsAffected == 0)
+            {
+                throw new NotFoundException($"Product with ID {id} not found.");
+            }
             return new ProductResponseDto
             {
-                Id = product.Id,
-                Name = product.Name,
-                Price = product.Price,
-                CategoryId = product.CategoryId,
-                CategoryName = category?.Name ?? string.Empty,
-                CreatedAt = product.CreatedAt
+                Id = id,
+                Name = productDto.Name ?? string.Empty, 
+                Price = productDto.Price ?? 0,
+                stock = productDto.stok ?? 0,
+                CategoryId = productDto.CategoryId,
+                CategoryName = category.Name,
+                CreatedAt = DateTime.UtcNow 
             };
         }
-        public async Task<PaginatedResponseDto<ProductResponseDto>>GetProductsAsync(ProductQueryRequest request)
+        public async Task<PaginatedResponseDto<ProductResponseDto>> GetProductsAsync(ProductQueryRequest request)
         {
             var query = context.Products
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .AsQueryable();
 
@@ -269,7 +278,7 @@ namespace Ecommerceapi.services.ProductServices
                 (totalPages > 0 &&
                  request.Page.PageNumber > totalPages))
             {
-                throw new BadHttpRequestException(
+                throw new BadRequestException(
                     $"Page {request.Page.PageNumber} not found.");
             }
 
@@ -298,6 +307,7 @@ namespace Ecommerceapi.services.ProductServices
                     Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
+                    stock = p.stok,
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category?.Name ?? string.Empty,
                     CreatedAt = p.CreatedAt

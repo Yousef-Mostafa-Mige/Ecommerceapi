@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Ecommerceapi.Dtos.ProductDtos;
 using FluentValidation;
 
@@ -5,17 +6,11 @@ namespace Ecommerceapi.Dtos.ProductDtos
 {
     public class UpdateProductDto
     {
-        public string Name { get; set; } = string.Empty;
-        public decimal Price { get; set; }
+        public string? Name { get; set; } = string.Empty;
+        public decimal ?Price { get; set; }
+        public int? stok { get; set; }
+
+        [Required]
         public int CategoryId { get; set; }
     }
 }
-public class ProductValidationUpdateProductDto : AbstractValidator<UpdateProductDto>
-    {
-        public ProductValidationUpdateProductDto()
-        {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
-            RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
-            RuleFor(x => x.CategoryId).GreaterThan(0).WithMessage("CategoryId must be greater than zero.");
-        }
-    }

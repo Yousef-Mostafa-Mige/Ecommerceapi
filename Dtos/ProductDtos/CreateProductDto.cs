@@ -7,7 +7,7 @@ namespace Ecommerceapi.Dtos.ProductDtos
     {
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
-
+        public int stok {get;set;}
         public int CategoryId { get; set; }
     }
 }
@@ -17,6 +17,7 @@ public class ProductValidationCreateProductDto : AbstractValidator<CreateProduct
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
         RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+        RuleFor(x => x.stok).GreaterThan(0).WithMessage("stok must be greater than zero.");
         RuleFor(x => x.CategoryId).GreaterThan(0).WithMessage("CategoryId must be greater than zero.");
     }
 }
