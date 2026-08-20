@@ -34,7 +34,7 @@ namespace Ecommerceapi.Controllers
         }
          [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetAllCategories(PaginatedRequestDto  page)
+        public async Task<IActionResult> GetAllCategories([FromQuery] PaginatedRequestDto  page)
         {
             var result = await categoryService.GetAllCategoriesAsync(page);
             return Ok(result);

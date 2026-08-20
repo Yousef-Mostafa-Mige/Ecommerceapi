@@ -91,7 +91,7 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<ProductResponseDto?> GetProductByIdAsync(int id)
         {
-            var qury = context.Products.Where(p => p.Id == id).AsQueryable().AsNoTracking();
+            var qury = context.Products.Where(p => p.Id == id).Include(p=>p.Category).AsQueryable().AsNoTracking();
             var product = await qury.FirstOrDefaultAsync();
             if (product is null)
             {

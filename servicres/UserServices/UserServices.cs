@@ -59,7 +59,7 @@ namespace Ecommerceapi.services.UserServices
             if (passwordVerificationResult ==
                 PasswordVerificationResult.Failed)
             {
-                throw new UnauthorizedAccessException("Invalid credentials.");
+                throw new UnauthorizedException("Invalid credentials.");
             }
 
             return await GenerateTokenAsync(user);
@@ -121,6 +121,7 @@ namespace Ecommerceapi.services.UserServices
 
             var user = new User
             {
+                Role= registerUserDto.role,
                 Username = registerUserDto.Username,
                 CreatedAt = DateTime.UtcNow
             };

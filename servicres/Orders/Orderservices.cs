@@ -101,7 +101,7 @@ namespace Ecommerceapi.services.OrderServices
         }
         public async Task<bool> DeleteOrderAsync(int id, int userId)
         {
-            var q = context.Orders.Where(p => p.Id == id).AsQueryable();
+            var q = context.Orders.Where(p => p.Id == id&& p.UserId==userId).AsQueryable();
             var order = await q.ExecuteDeleteAsync();
             // var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
             if (order == 0)

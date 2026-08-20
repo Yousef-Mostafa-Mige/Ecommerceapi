@@ -48,7 +48,7 @@ namespace Ecommerceapi.Controllers
         }
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public async Task<IActionResult> GetAllOrders(PaginatedRequestDto  page)
+        public async Task<IActionResult> GetAllOrders([FromQuery]PaginatedRequestDto  page)
         {
 
             var result = await orderService.GetAllOrdersAsync(page);
@@ -70,7 +70,7 @@ namespace Ecommerceapi.Controllers
             return Ok("Order deleted successfully.");
         }
         [HttpGet("user")]
-        public async Task<IActionResult> GetOrdersByUserId(PaginatedRequestDto  page)
+        public async Task<IActionResult> GetOrdersByUserId([FromQuery]PaginatedRequestDto  page)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdClaim is null)

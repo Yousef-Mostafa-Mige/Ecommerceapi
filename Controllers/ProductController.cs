@@ -64,6 +64,7 @@ namespace Ecommerceapi.Controllers
             }
             return Ok("Product deleted successfully.");
         }
+        [AllowAnonymous]
         [HttpGet("search")]
         public async Task<IActionResult> GetProducts([FromQuery] ProductQueryRequest request)
         {
