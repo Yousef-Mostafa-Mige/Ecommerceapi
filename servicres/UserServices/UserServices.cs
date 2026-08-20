@@ -121,7 +121,6 @@ namespace Ecommerceapi.services.UserServices
 
             var user = new User
             {
-                Role= registerUserDto.role,
                 Username = registerUserDto.Username,
                 CreatedAt = DateTime.UtcNow
             };
