@@ -41,6 +41,7 @@ namespace Ecommerceapi.services.ProductServices
                 Name = product.Name,
                 Price = product.Price,
                 stock = product.stok,
+                RowVersion = product.RowVersion,
                 CategoryId = product.CategoryId,
                 CategoryName = category.Name,
                 CreatedAt = product.CreatedAt
@@ -49,7 +50,7 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            var product = await context.Products.Where(p =>p.Id == id).ExecuteDeleteAsync();
+            var product = await context.Products.Where(p => p.Id == id).ExecuteDeleteAsync();
             if (product == 0)
             {
                 throw new NotFoundException($"Product with ID {id} not found.");
@@ -82,6 +83,7 @@ namespace Ecommerceapi.services.ProductServices
                     Name = p.Name,
                     Price = p.Price,
                     stock = p.stok,
+                    RowVersion = p.RowVersion,
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category?.Name ?? string.Empty,
                     CreatedAt = p.CreatedAt
@@ -91,7 +93,7 @@ namespace Ecommerceapi.services.ProductServices
 
         public async Task<ProductResponseDto?> GetProductByIdAsync(int id)
         {
-            var qury = context.Products.Where(p => p.Id == id).Include(p=>p.Category).AsQueryable().AsNoTracking();
+            var qury = context.Products.Where(p => p.Id == id).Include(p => p.Category).AsQueryable().AsNoTracking();
             var product = await qury.FirstOrDefaultAsync();
             if (product is null)
             {
@@ -104,13 +106,17 @@ namespace Ecommerceapi.services.ProductServices
                 Name = product.Name,
                 Price = product.Price,
                 stock = product.stok,
+                RowVersion = product.RowVersion,
+
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category?.Name ?? string.Empty,
                 CreatedAt = product.CreatedAt
             };
         }
 
-        public async Task<ProductResponseDto?> UpdateProductAsync(int id, UpdateProductDto productDto)
+        public async Task<ProductResponseDto?> UpdateProductAsync(
+    int id,
+    UpdateProductDto productDto)
         {
             var category = await context.Categories
                 .AsNoTracking()
@@ -118,29 +124,48 @@ namespace Ecommerceapi.services.ProductServices
 
             if (category is null)
             {
-                throw new NotFoundException($"Category with ID {productDto.CategoryId} not found.");
+                throw new NotFoundException(
+                    $"Category with ID {productDto.CategoryId} not found.");
             }
-            int rowsAffected = await context.Products
-                .Where(p => p.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.CategoryId, productDto.CategoryId)
-                    .SetProperty(p => p.Name, p => productDto.Name ?? p.Name)
-                    .SetProperty(p => p.Price, p => productDto.Price ?? p.Price)
-                    .SetProperty(p => p.stok, p => productDto.stok ?? p.stok)
-                );
-            if (rowsAffected == 0)
+
+            var product = await context.Products
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product is null)
             {
-                throw new NotFoundException($"Product with ID {id} not found.");
+                throw new NotFoundException(
+                    $"Product with ID {id} not found.");
             }
+
+            product.Name = productDto.Name ?? product.Name;
+            product.Price = productDto.Price ?? product.Price;
+            product.stok = productDto.stok ?? product.stok;
+            product.CategoryId = productDto.CategoryId;
+
+            context.Entry(product)
+                .Property(p => p.RowVersion)
+                .OriginalValue = productDto.RowVersion;
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException(
+                    "Product was modified by another user.");
+            }
+
             return new ProductResponseDto
             {
-                Id = id,
-                Name = productDto.Name ?? string.Empty, 
-                Price = productDto.Price ?? 0,
-                stock = productDto.stok ?? 0,
-                CategoryId = productDto.CategoryId,
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                stock = product.stok,
+                RowVersion = product.RowVersion,
+                CategoryId = product.CategoryId,
                 CategoryName = category.Name,
-                CreatedAt = DateTime.UtcNow 
+                CreatedAt = product.CreatedAt
             };
         }
         public async Task<PaginatedResponseDto<ProductResponseDto>> GetProductsAsync(ProductQueryRequest request)
@@ -308,6 +333,7 @@ namespace Ecommerceapi.services.ProductServices
                     Name = p.Name,
                     Price = p.Price,
                     stock = p.stok,
+                    RowVersion = p.RowVersion,
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category?.Name ?? string.Empty,
                     CreatedAt = p.CreatedAt

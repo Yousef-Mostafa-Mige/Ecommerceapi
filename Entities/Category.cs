@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Ecommerceapi.Entities;
 
 namespace Ecommerceapi.Entities
@@ -6,6 +7,8 @@ namespace Ecommerceapi.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = [];
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 } 

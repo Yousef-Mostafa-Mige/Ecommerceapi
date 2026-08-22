@@ -8,5 +8,6 @@ public class ProductResponseDto
     public int stock {get; set;}
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
+    public byte[] RowVersion { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }

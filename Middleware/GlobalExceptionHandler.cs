@@ -12,6 +12,7 @@ namespace ECommerceApi.Middleware
             var (statusCode, message) = exception switch
             {
                 NotFoundException => (StatusCodes.Status404NotFound, "not found"),
+                ConflictException => (StatusCodes.Status409Conflict, "Internal Server Error"),
                 BadRequestException => (StatusCodes.Status400BadRequest, "bad request"),
                 UnauthorizedException => (StatusCodes.Status401Unauthorized, "unauthorized"),
                 NullReferenceException => (StatusCodes.Status400BadRequest, "null reference"),

@@ -5,6 +5,7 @@ namespace Ecommerceapi.Dtos.CategoryDtos;
 public class UpdateCategoryDto
 {
     public string Name { get; set; } = string.Empty;
+    public byte[] RowVersion { get; set; } = [];
 }
 public class CategoryValidationUpdateCategoryDto : AbstractValidator<UpdateCategoryDto>
 {

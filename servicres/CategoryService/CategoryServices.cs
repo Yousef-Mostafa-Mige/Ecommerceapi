@@ -31,7 +31,8 @@ namespace Ecommerceapi.services.CategoryService
                 return new CategoryResponseDto
                 {
                     Id = category.Id,
-                    Name = category.Name
+                    Name = category.Name,
+                    RowVersion = category.RowVersion,
                 };
             }
             catch
@@ -65,7 +66,7 @@ namespace Ecommerceapi.services.CategoryService
             {
                 throw new BadRequestException("http bad caregory");
             }
-            var categories = await context.Categories.Skip((page.PageNumber - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var categories = await qury.Skip((page.PageNumber - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             return new PaginatedResponseDto<CategoryResponseDto>
             {
                 PageNumber = page.PageNumber,
@@ -75,7 +76,8 @@ namespace Ecommerceapi.services.CategoryService
                 Items = categories.Select(c => new CategoryResponseDto
                 {
                     Id = c.Id,
-                    Name = c.Name
+                    Name = c.Name,
+                    RowVersion = c.RowVersion
                 }).ToList()
             };
         }
@@ -90,24 +92,37 @@ namespace Ecommerceapi.services.CategoryService
             return new CategoryResponseDto
             {
                 Id = category.Id,
-                Name = category.Name
+                Name = category.Name,
+                RowVersion = category.RowVersion
 
             };
         }
 
         public async Task<CategoryResponseDto?> UpdateCategoryAsync(int id, UpdateCategoryDto categoryRequestDto)
         {
-            var qury = context.Categories.Where(p => p.Id == id).AsQueryable();
-            var category = await qury.ExecuteUpdateAsync(setters=>setters
-            .SetProperty(p=>p.Name,p=>categoryRequestDto.Name??p.Name));
-            if (category ==0)
+            var category = await context.Categories.FirstOrDefaultAsync(p => p.Id == id);
+            if (category is null)
             {
                 throw new NotFoundException($"Category with ID {id} not found.");
+            }
+            category.Name = categoryRequestDto.Name;
+            context.Entry(category)
+                .Property(p => p.RowVersion)
+                .OriginalValue = categoryRequestDto.RowVersion;
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException(
+                    "Product was modified by another user.");
             }
             return new CategoryResponseDto
             {
                 Id = id,
-                Name = categoryRequestDto.Name
+                Name = category.Name,
+                RowVersion = category.RowVersion
             };
         }
     }
