@@ -29,7 +29,8 @@ namespace Ecommerceapi.services.ProductServices
                 Name = productDto.Name,
                 Price = productDto.Price,
                 stok = productDto.stok,
-                CategoryId = productDto.CategoryId
+                CategoryId = productDto.CategoryId,
+                RowVersion = 1
             };
 
             await context.Products.AddAsync(product);
@@ -145,7 +146,7 @@ namespace Ecommerceapi.services.ProductServices
             context.Entry(product)
                 .Property(p => p.RowVersion)
                 .OriginalValue = productDto.RowVersion;
-
+            product.RowVersion++;
             try
             {
                 await context.SaveChangesAsync();

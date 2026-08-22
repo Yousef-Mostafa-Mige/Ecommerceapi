@@ -18,7 +18,12 @@ namespace Ecommerceapi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+            modelBuilder.Entity<Category>()
+                .Property(p => p.RowVersion)
+                .IsConcurrencyToken();
+            modelBuilder.Entity<Product>()
+                .Property(p => p.RowVersion)
+                .IsConcurrencyToken();
             // Configure relationships and constraints if needed
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
@@ -40,7 +45,7 @@ namespace Ecommerceapi.Data
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
-           
+
         }
     }
 }

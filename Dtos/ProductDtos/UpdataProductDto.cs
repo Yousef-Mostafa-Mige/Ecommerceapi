@@ -13,6 +13,6 @@ namespace Ecommerceapi.Dtos.ProductDtos
         [Required]
         public int CategoryId { get; set; }
         [Required]
-        public byte[] RowVersion { get; set; } = [];
+        public long RowVersion { get; set; } 
     }
 }

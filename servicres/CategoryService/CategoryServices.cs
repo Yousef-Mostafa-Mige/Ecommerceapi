@@ -20,7 +20,8 @@ namespace Ecommerceapi.services.CategoryService
                 }
                 var category = new Category
                 {
-                    Name = categoryRequestDto.Name
+                    Name = categoryRequestDto.Name,
+                    RowVersion = 1
                 };
 
                 await context.Categories.AddAsync(category);
@@ -109,6 +110,7 @@ namespace Ecommerceapi.services.CategoryService
             context.Entry(category)
                 .Property(p => p.RowVersion)
                 .OriginalValue = categoryRequestDto.RowVersion;
+            category.RowVersion++;
             try
             {
                 await context.SaveChangesAsync();
@@ -116,7 +118,7 @@ namespace Ecommerceapi.services.CategoryService
             catch (DbUpdateConcurrencyException)
             {
                 throw new ConflictException(
-                    "Product was modified by another user.");
+                    "category was modified by another user.");
             }
             return new CategoryResponseDto
             {
